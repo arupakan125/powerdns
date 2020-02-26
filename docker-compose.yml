@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  pda:
+    image: ngoduykhanh/powerdns-admin:latest
+    ports:
+      - "9191:80"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=mysql://pda:${PDA_DB_PASSWORD}@pda_db/pda
+    restart: on-failure
+  pda_db:
+    image: mariadb:latest
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=True
+      - MYSQL_DATABASE=pda
+      - MYSQL_USER=pda
+      - MYSQL_PASSWORD=$PDA_DB_PASSWORD
+    volumes:
+      - ./pda_db/:/var/lib/mysql
+    restart: on-failure
+  pdns:
+    image: arupakan125/pdns:latest
+    ports:
+      - "53:53"
+      - "53:53/udp"
+    environment:
+      - ALLOW-AXFR-IPS=0.0.0.0/0
+      - API=yes
+      - API_KEY=$API_KEY
+      - MASTER=yes
+      - SLAVE=yes
+      - WEBSERVER_ADDRESS=0.0.0.0
+      - WEBSERVER_ALLOW_FROM=0.0.0.0/0
+    volumes:
+      - ./pdns_db/:/var/lib/powerdns
+    restart: on-failure
